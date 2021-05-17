@@ -34,7 +34,9 @@
             fixed4 frag(v2f i) : SV_TARGET
             {
                 fixed d = distance(i.uv.xy, fixed2(0.5, 0.5));
-                fixed sin_val = sin(d * 4);
+                // fixed sin_val = sin(d * 4);
+                // fixed sin_val = sin(d * 100);
+                fixed sin_val = sin(d * 100 + _Time.y * 100);
 
                 return step(0.99, sin_val);
             }
