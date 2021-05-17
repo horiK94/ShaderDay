@@ -1,4 +1,4 @@
-﻿Shader "Shader10/TwoDivide"
+﻿Shader "Shader10/DrawLine"
 {
     Properties
     {
@@ -27,16 +27,13 @@
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                //TilingとOffset考慮時はTRANFORM_TEX()を用いる
-                //appdata_baseのuv座標は texcoord
                 o.uv = v.texcoord;
                 return o;
             }
 
             fixed4 frag(v2f i) : SV_TARGET
             {
-                //step(a, x): xがa以上なら1. それ以外0
-                return step(0.2, i.uv.x);
+                return (step(0.6, i.uv.x) - step(0.7, i.uv.x));
             }
             ENDCG
         }

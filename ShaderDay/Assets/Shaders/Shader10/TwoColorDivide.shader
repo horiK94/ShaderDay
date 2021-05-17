@@ -1,4 +1,4 @@
-﻿Shader "Shader10/TwoDivide"
+﻿Shader "Shader10/TwoColorDivide"
 {
     Properties
     {
