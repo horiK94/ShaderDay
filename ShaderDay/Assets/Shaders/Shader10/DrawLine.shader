@@ -33,7 +33,8 @@
 
             fixed4 frag(v2f i) : SV_TARGET
             {
-                return (step(0.6, i.uv.x) - step(0.7, i.uv.x));
+                // return (step(0.6, i.uv.x) - step(0.7, i.uv.x));
+                return step(0.4, i.uv.x) * step(0.5, 1 - i.uv.x);
             }
             ENDCG
         }
