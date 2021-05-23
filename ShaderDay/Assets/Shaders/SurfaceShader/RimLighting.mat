@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: IceSurfaceShader 1
-  m_Shader: {fileID: 4800000, guid: 7f3c5f9c88586ba448735fde71b92e8a, type: 3}
+  m_Name: RimLighting
+  m_Shader: {fileID: 4800000, guid: f6be934f6c333644592e4e5545d7bd7e, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -74,6 +74,6 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Color: {r: 0.009870711, g: 0.16981131, b: 0, a: 1}
+    - _EmissionColor: {r: 0.15471691, g: 1, b: 0.39338505, a: 1}
   m_BuildTextureStacks: []

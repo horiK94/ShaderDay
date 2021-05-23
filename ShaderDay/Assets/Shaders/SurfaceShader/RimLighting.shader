@@ -32,7 +32,7 @@
             float emission = 1 - abs(dot(normalize(IN.viewDir), normalize(IN.worldNormal)));
             o.Alpha = 1;
             o.Albedo = _Color;
-            o.Emission = emission * _EmissionColor;
+            o.Emission = pow(emission, 3) * _EmissionColor;
         }
         ENDCG
     }
