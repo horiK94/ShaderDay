@@ -1,4 +1,4 @@
-﻿Shader "Custom/IceSurfaceShader"
+﻿Shader "Custom/AlphaSurfaceShader"
 {
     Properties
     {
@@ -20,15 +20,13 @@
 
         struct Input
         {
-            float3 viewDir : TEXCOORD0;
-            float3 worldNormal : TEXCOORD1;
+            float2 uv_MainTex;
         };
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
-            float alpha = 1 - abs(dot(IN.viewDir, IN.worldNormal));
-            o.Alpha  = alpha * 1.5;
-            o.Albedo = (0.2, 0.2, 0.2, 1);
+            o.Albedo = fixed4(0.6f, 0.7f, 0.4f, 1);
+            o.Alpha = 0.3;
         }
         ENDCG
     }
