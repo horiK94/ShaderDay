@@ -1,4 +1,4 @@
-﻿Shader "Custom/TextureShader"
+﻿Shader "Custom/WaveShader"
 {
     Properties
     {
@@ -27,7 +27,7 @@
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
             //TRANSFORM_TEX()がなくてもTilling, Offsetが考慮される
-            o.Albedo = tex2D(_MainTex, IN.uv_MainTex + _Time.y);
+            o.Albedo = tex2D(_MainTex, IN.uv_MainTex + _Time.x);
         }
         ENDCG
     }
