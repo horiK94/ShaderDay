@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: WaveShader
-  m_Shader: {fileID: 4800000, guid: 7be7b776ff9264741b1447071c57c395, type: 3}
+  m_Name: WorldCircleShader
+  m_Shader: {fileID: 4800000, guid: 1307021c8277ca449a55064e54646422, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -36,8 +36,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _Duration: -2.04
     - _Glossiness: 0.5
     - _Metallic: 0
+    - _Speed: 30.28
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
