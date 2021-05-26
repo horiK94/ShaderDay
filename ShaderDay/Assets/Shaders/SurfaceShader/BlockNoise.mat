@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RandomNoiseShader
-  m_Shader: {fileID: 4800000, guid: 4f663bf861c97e34a8dd9841ad67f987, type: 3}
+  m_Name: BlockNoise
+  m_Shader: {fileID: 4800000, guid: 9d0c112095d876744bf0caaddefaa05e, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -36,6 +36,9 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _BLock_Y: 1
+    - _Block_X: 10
+    - _Block_Y: 10
     - _Duration: -2.04
     - _Glossiness: 0.5
     - _Metallic: 0
