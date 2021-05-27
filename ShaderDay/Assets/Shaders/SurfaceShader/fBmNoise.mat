@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ParinNoise
-  m_Shader: {fileID: 4800000, guid: e527ccdd52b90e34f9ec0a744df9c6a6, type: 3}
+  m_Name: fBmNoise
+  m_Shader: {fileID: 4800000, guid: 8721b137ddb46784693c4a8c1d22cd22, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -37,8 +37,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _BLock_Y: 1
-    - _Block_X: 10
-    - _Block_Y: 10
+    - _Block_X: 6
+    - _Block_Y: 6
     - _Duration: -2.04
     - _Glossiness: 0.5
     - _Metallic: 0
