@@ -6,6 +6,7 @@
         _Size("rain size", Float) = 1
         _T("test time", Float) = 0
         _Distribution("distribution", Range(-5, 5)) = 1
+        _Blur("blur", Range(0, 1)) = 1
     }
     SubShader
     {
@@ -45,6 +46,8 @@
             float _T;
             //水滴のuvのずらし量
             float _Distribution;
+            //くもりガラスブレ量
+            float _Blur;
 
             v2f vert (appdata v)
             {
@@ -57,18 +60,18 @@
 
             fixed rand(fixed2 co)
             {
-                return frac(sin(dot(co.rg ,fixed2(12.9898,78.233))) * 43758.5453);
+                co = frac(co * float2(123.34, 345.45));
+                co += dot(co, co + 34.345);
+                return frac(co.x * co.y);
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            //(x, y, z): x, y→ tex2Dで参照するuv座標のズレ. z→どの程度曇っているか 
+            float3 Layer(float2 UV, float t)
             {
-                float t = fmod(_Time.y + _T, 7200);
-                float4 col = 0;
-
                 //アスペクト比は実際の縦横比の逆. つまり、縦:横 = 1:2とする場合は uv座標に(2, 1)をかければ良い
                 float2 aspect = fixed2(2, 1);
 
-                float2 uv = i.uv * _Size * aspect;
+                float2 uv = UV * _Size * aspect;
                 //水滴の落ちる速度に応じて格子も下げる(足していくと(0, 0)基準が下に下がることになる)
                 uv.y += .25*t;
                 //各格子の真ん中を中心とする
@@ -82,7 +85,7 @@
 
                 //uvのyの値が変わるとxも変わるため、yを固定した時のxの位置の(float drop = S(.05, .03, length(dropPos));による)幅分だけが
                 //yを移動した分だけ水滴になる(yは-sin(t+sin(t+sin(t)*.5))*.45;よりt依存なのでどの程度の上下まで水滴が表示されるかは確定する)
-                float blur = i.uv.y * 10;       //10を大きくすると少しのズレで移動量が増えることになるので、水滴が細くなる
+                float blur = UV.y * 10;       //10を大きくすると少しのズレで移動量が増えることになるので、水滴が細くなる
                 // float blur = t;
                 float x = (idRand - .5)*.8;     //-.4 ~ .4
                 x += (.4 - abs(x)) * sin(3*blur)*pow(sin(blur), 6)*.45;     
@@ -130,13 +133,14 @@
                 // dropPosがxに関する距離0になる放物線に対し、左右の0.05より離れたら暗くする
                 fogTrail *= S(.05, .04, abs(dropPos.x));
 
-                //これにより、現在の雫に対して下に凸の放物線が引かれる(放物線になるのは y -= (gv.x - x) * (gv.x - x)より)
-                col.rgb += fogTrail *.5;
+                //colorの出力は今回の関数では行わないのでコメントアウト
+                // //これにより、現在の雫に対して下に凸の放物線が引かれる(放物線になるのは y -= (gv.x - x) * (gv.x - x)より)
+                // col.rgb += fogTrail *.5;
             
-                //drop: 現在下にある水滴
-                col.rgb += drop;
-                //trailDrop: 水滴の軌跡(8つ)
-                col.rgb += trailDrop;
+                // //drop: 現在下にある水滴
+                // col.rgb += drop;
+                // //trailDrop: 水滴の軌跡(8つ)
+                // col.rgb += trailDrop;
 
                 //uv座標を水滴のときだけ最大(1, 1)だけずらす. つまり白い部分は濃さだけuv座標をずらす。
                 //白と黒の間の色がuv座標が違って見えることになる
@@ -145,7 +149,7 @@
 
                 //一定方向しかずらせない上の式ではなく、
                 //水滴の中心からどの程度ずれているかを求め、それをuv座標をずらす方向とする
-                float offset = drop * dropPos + trailDrop * trailPos;
+                float2 offset = drop * dropPos + trailDrop * trailPos;
 
                 // col *= 0;
                 // col.rgb = rand(id);
@@ -155,7 +159,29 @@
                 //     col = fixed4(1, 0, 0, 1);
                 // }
 
-                col.rgb = tex2D(_MainTex, i.uv + offset * _Distribution);
+                return float3(offset, fogTrail);
+            }
+
+            fixed4 frag (v2f i) : SV_Target
+            {
+                float t = fmod(_Time.y + _T, 7200);
+                float4 col = 0;
+
+                float3 layer = Layer(i.uv, t);
+                layer += Layer(i.uv * 1.23+7.54, t *0.9 - 0.5);
+                layer += Layer(i.uv * 1.35+1.54, t + sin(t));
+                layer += Layer(i.uv * 1.57-7.54, t * 1.1 + 0.23);
+
+                //ブラーの強度を7段階までできるように
+                // float blurGlass = _Blur * 7;
+
+                //ブラーによってぼかしたいのは水滴の箇所以外なので 1 - fogTrailをかける
+                float blurGlass = _Blur * 7 * (1 - layer.z);
+
+                // col.rgb = tex2D(_MainTex, i.uv + offset * _Distribution);
+                //4つめの引数: 0が通常. 1つ上がるごとに1/2倍のミップマップが使用される
+                //ミップマップによるボケを使用しながらブラーを表現する
+                col.rgb = tex2Dlod(_MainTex, fixed4(i.uv + layer.xy * _Distribution, 0, blurGlass));
 
                 return col;
             }
