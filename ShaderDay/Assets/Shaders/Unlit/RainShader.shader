@@ -10,8 +10,14 @@
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="Opaque" "Queue"="Transparent" }
         LOD 100
+
+        //直前にレンダリングしたコンテンツにアクセスできる
+        //sampler2D _GradTextureでアクセス可能
+        GrabPass { "_GradTexture" }
+        //ミップマップは高価な処理 → 毎回描画するGrabTextureでは生成しない
+        //サイズを変えて複数回サンプリングし、ぼかしを得る
 
         Pass
         {
@@ -34,11 +40,14 @@
             struct v2f
             {
                 float2 uv : TEXCOORD0;
+                //_GrabTextureに描画されるのはカメラに写っているものなので、ずれてしまう
+                //そのため、新たにgrabUvを考える
+                float4 grabUv : TEXCOORD1;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
             };
 
-            sampler2D _MainTex;
+            sampler2D _MainTex, _GradTexture;
             float4 _MainTex_ST;
             //uv分割数
             float _Size;
@@ -54,6 +63,7 @@
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.grabUv = UNITY_PROJ_COORD(ComputeGrabScreenPos(o.vertex));
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
@@ -167,21 +177,47 @@
                 float t = fmod(_Time.y + _T, 7200);
                 float4 col = 0;
 
-                float3 layer = Layer(i.uv, t);
-                layer += Layer(i.uv * 1.23+7.54, t *0.9 - 0.5);
-                layer += Layer(i.uv * 1.35+1.54, t + sin(t));
-                layer += Layer(i.uv * 1.57-7.54, t * 1.1 + 0.23);
+                float3 drops = Layer(i.uv, t);
+                drops += Layer(i.uv * 1.23+7.54, t * 0.9 - 0.5);
+                drops += Layer(i.uv * 1.35+1.54, t + sin(t));
+                drops += Layer(i.uv * 1.57-7.54, t * 1.1 + 0.23);
 
                 //ブラーの強度を7段階までできるように
                 // float blurGlass = _Blur * 7;
 
                 //ブラーによってぼかしたいのは水滴の箇所以外なので 1 - fogTrailをかける
-                float blurGlass = _Blur * 7 * (1 - layer.z);
+                float blurGlass = _Blur * 7 * (1 - drops.z);
 
                 // col.rgb = tex2D(_MainTex, i.uv + offset * _Distribution);
                 //4つめの引数: 0が通常. 1つ上がるごとに1/2倍のミップマップが使用される
                 //ミップマップによるボケを使用しながらブラーを表現する
-                col.rgb = tex2Dlod(_MainTex, fixed4(i.uv + layer.xy * _Distribution, 0, blurGlass));
+                // col = tex2Dlod(_MainTex, fixed4(i.uv + layer.xy * _Distribution, 0, blurGlass));
+
+                float2 projUv = i.grabUv.xy / i.grabUv.w;
+                projUv += drops.xy * _Distribution;
+
+                const float numSamples = 32;
+                //取得位置をランダムに
+                float a = rand(projUv) * 2 * 3.141592;
+
+                //サンプル箇所が遠すぎるのでblurGrassの値を小さくする
+                blurGlass *= .01;
+
+                for(float i=0; i<numSamples; i++)
+                {
+                    //中心から一定の距離の位置にずれた色を取得する
+                    float2 offset = float2(sin(a), cos(a)) * blurGlass;
+                    float d = frac(sin((i + 1)*546.)*5424.);
+                    d = sqrt(d);
+                    offset *= d;
+
+                    //後ろの背景とずれて表示され、さらに後ろのオブジェクトも表示されないので視差を考慮したuv座標を使用する
+                    //中心から同じ距離の位置にあるものをサンプリングしているため、境界がはっきりしてしまう
+                    col += tex2D(_GradTexture, projUv + offset);
+                    a++;
+                }
+                //4回足した平均で色を決定する
+                col /= numSamples;
 
                 return col;
             }
