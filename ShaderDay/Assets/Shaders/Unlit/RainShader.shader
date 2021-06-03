@@ -185,8 +185,14 @@
                 //ブラーの強度を7段階までできるように
                 // float blurGlass = _Blur * 7;
 
+                //遠くから見ると、細かく表示されてしまう
+                //隣のピクセルが何ピクセル離れているかを求めるためにスクリーン上の画素値の差分を求める(方向微分法)
+                //遠くから見る → 差分が大きい, 近くから見る → 差分がゆるい (とはいえ、遠くでも差分はかなり小さいので50倍とかすると見えやすい)
+                //近い→白, 遠い→黒
+                float fade = 1-saturate(fwidth(i.uv) * 60);
+
                 //ブラーによってぼかしたいのは水滴の箇所以外なので 1 - fogTrailをかける
-                float blurGlass = _Blur * 7 * (1 - drops.z);
+                float blurGlass = _Blur * 7 * (1 - drops.z) * fade;
 
                 // col.rgb = tex2D(_MainTex, i.uv + offset * _Distribution);
                 //4つめの引数: 0が通常. 1つ上がるごとに1/2倍のミップマップが使用される
@@ -194,7 +200,7 @@
                 // col = tex2Dlod(_MainTex, fixed4(i.uv + layer.xy * _Distribution, 0, blurGlass));
 
                 float2 projUv = i.grabUv.xy / i.grabUv.w;
-                projUv += drops.xy * _Distribution;
+                projUv += drops.xy * _Distribution * fade;
 
                 const float numSamples = 32;
                 //取得位置をランダムに
@@ -219,7 +225,9 @@
                 //4回足した平均で色を決定する
                 col /= numSamples;
 
-                return col;
+                // col *= 0; col += fade;
+                //ちょっとだけ暗くするため 0.9をかける
+                return col * .9;
             }
             ENDCG
         }
