@@ -63,6 +63,8 @@
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                //ComputeGrabScreenPos: ワールド座標をクリップ座標(-w ~ wもしくは0 ~ wに変換する)
+                //UNITY_PROJ_COORD: 基本引数の値をそのまま返す(PS vitaのときは変換されるらしい)
                 o.grabUv = UNITY_PROJ_COORD(ComputeGrabScreenPos(o.vertex));
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
@@ -186,12 +188,13 @@
                 // float blurGlass = _Blur * 7;
 
                 //遠くから見ると、細かく表示されてしまう
-                //隣のピクセルが何ピクセル離れているかを求めるためにスクリーン上の画素値の差分を求める(方向微分法)
+                //fwidth: 隣のピクセルが何ピクセル離れているかを求めるためにスクリーン上の画素値の差分を求める(方向微分法)
                 //遠くから見る → 差分が大きい, 近くから見る → 差分がゆるい (とはいえ、遠くでも差分はかなり小さいので50倍とかすると見えやすい)
                 //近い→白, 遠い→黒
                 float fade = 1-saturate(fwidth(i.uv) * 60);
 
                 //ブラーによってぼかしたいのは水滴の箇所以外なので 1 - fogTrailをかける
+                //fadeをかけることで、遠くから見た場合は近くの位置のテクセルを参照するようになる
                 float blurGlass = _Blur * 7 * (1 - drops.z) * fade;
 
                 // col.rgb = tex2D(_MainTex, i.uv + offset * _Distribution);
@@ -199,7 +202,10 @@
                 //ミップマップによるボケを使用しながらブラーを表現する
                 // col = tex2Dlod(_MainTex, fixed4(i.uv + layer.xy * _Distribution, 0, blurGlass));
 
+                //grabUv(クリップ座標: -w ~ w)を正規デバイス系座標(-1 ~ 1)に変換するため、wで乗算
                 float2 projUv = i.grabUv.xy / i.grabUv.w;
+                //水滴がある場合はずらす. fadeをかけることによって、近い場合は少し遠い位置を、遠い場合は少し近い位置をサンプリングする
+                //これにより、チラツキが抑えられる
                 projUv += drops.xy * _Distribution * fade;
 
                 const float numSamples = 32;
@@ -211,10 +217,11 @@
 
                 for(float i=0; i<numSamples; i++)
                 {
-                    //中心から一定の距離の位置にずれた色を取得する
+                    //中心からの方向を決定する: 曇ってない場合 = drops.zが1のときはblurGlassが0のため中心からサンプリングされる
                     float2 offset = float2(sin(a), cos(a)) * blurGlass;
                     float d = frac(sin((i + 1)*546.)*5424.);
                     d = sqrt(d);
+                    //ランダムで距離を決定する
                     offset *= d;
 
                     //後ろの背景とずれて表示され、さらに後ろのオブジェクトも表示されないので視差を考慮したuv座標を使用する
